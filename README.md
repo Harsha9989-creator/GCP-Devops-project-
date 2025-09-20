@@ -1,1 +1,3 @@
-this is my new 
+# Docker flask application
+
+- this aplication written in python
