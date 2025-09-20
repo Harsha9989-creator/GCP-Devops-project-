@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  namespace: gcp-devops-prod   # Important: use your namespace
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app
+        image: us-central1-docker.pkg.dev/<PROJECT_ID>/my-repo/my-app:latest
+        ports:
+        - containerPort: 8080
