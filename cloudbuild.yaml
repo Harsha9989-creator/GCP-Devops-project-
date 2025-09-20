@@ -1,8 +1,14 @@
 steps:
-  - name: 'docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/my-app', '.']
+  # Step 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/my-app', '.']
+
+  # Step 2: Push Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/my-app']
 
 images:
-  - 'gcr.io/$PROJECT_ID/my-app'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/my-app'
+
 options:
   logging: CLOUD_LOGGING_ONLY
