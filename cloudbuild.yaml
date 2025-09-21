@@ -17,22 +17,42 @@ steps:
           --zone us-central1-a \
           --project $PROJECT_ID
 
-  # Step 4: Update Deployment image
+  # Step 4: Create namespace if not exists
   - name: 'gcr.io/cloud-builders/kubectl'
+    entrypoint: 'bash'
     args:
-      - 'set'
-      - 'image'
-      - 'deployment/my-app'
-      - 'my-app=us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/my-app:$COMMIT_SHA'
-      - '--namespace=gcp-devops-prod'
-    env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=cluster-gcpdevops'
+      - '-c'
+      - |
+        if ! kubectl get namespace gcp-devops-prod; then
+          kubectl create namespace gcp-devops-prod
+        fi
+
+  # Step 5: Create deployment if missing OR update image if exists
+  - name: 'gcr.io/cloud-builders/kubectl'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if kubectl get deployment my-app -n gcp-devops-prod; then
+          echo "Updating existing deployment..."
+          kubectl set image deployment/my-app my-app=us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/my-app:$COMMIT_SHA -n gcp-devops-prod
+        else
+          echo "Creating new deployment..."
+          kubectl create deployment my-app \
+            --image=us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/my-app:$COMMIT_SHA \
+            -n gcp-devops-prod
+          kubectl expose deployment my-app \
+            --type=LoadBalancer \
+            --port 80 \
+            --target-port 8080 \
+            -n gcp-devops-prod
+        fi
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/my-app:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
 
 
